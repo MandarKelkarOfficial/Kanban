@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Kanban App</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body {
+            padding: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .task-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .task-list li {
+            background-color: #f8f9fa;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .task-list a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .task-list li.completed {
+            background-color: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Kanban Board</h1>
+        <form class="form-inline" action="{{ url_for('add') }}" method="post">
+            <div class="form-group mx-sm-3 mb-2">
+                <label for="title" class="sr-only">Task Title:</label>
+                <input type="text" class="form-control" id="title" name="title" placeholder="Task Title" required>
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">Add Task</button>
+        </form>
+        <div class="row">
+            <div class="col-sm">
+                <h2>To Do</h2>
+                <ul class="task-list">
+                    {% for task in tasks if task.status == 'To Do' %}
+                        <li>{{ task.title }} | <a href="{{ url_for('update', id=task.id, status='In Progress') }}">Start</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-sm">
+                <h2>In Progress</h2>
+                <ul class="task-list">
+                    {% for task in tasks if task.status == 'In Progress' %}
+                        <li class="completed">{{ task.title }} | <a href="{{ url_for('update', id=task.id, status='Done') }}">Complete</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            <div class="col-sm">
+                <h2>Done</h2>
+                <ul class="task-list">
+                    {% for task in tasks if task.status == 'Done' %}
+                        <li class="completed">{{ task.title }} | <a href="{{ url_for('delete', id=task.id) }}">Delete</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</body>
+</html>
