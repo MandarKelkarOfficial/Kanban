@@ -1,5 +1,8 @@
 from flask import Flask, render_template, render_template_string, request, redirect, send_from_directory, url_for
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import *
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 import os
 
@@ -7,7 +10,15 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///kanban.db'
 db = SQLAlchemy(app)
 # app.static_folder = 'projects'
+Base = declarative_base()
 
+
+# class NewProject(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     project_name = db.Column(db.String(100), nullable=False)
+#     project_number = db.Column(db.String(50), unique=True, nullable=False)
+#     author_name = db.Column(db.String(100), nullable=False)
+#     tasks = db.relationship('Task', backref='project', lazy=True)
 
 class NewProject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -16,12 +27,6 @@ class NewProject(db.Model):
     author_name = db.Column(db.String(100), nullable=False)
     tasks = db.relationship('Task', backref='project', lazy=True)
 
-# class Task(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     title = db.Column(db.String(200), nullable=False)
-#     status = db.Column(db.String(20), nullable=False)
-#     date_created = db.Column(db.DateTime, default=datetime.utcnow)
-#     project_id = db.Column(db.Integer, db.ForeignKey('new_project.id'), nullable=False)
 
 
 class Task(db.Model):
@@ -31,18 +36,10 @@ class Task(db.Model):
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     project_number = db.Column(db.String(50), db.ForeignKey('new_project.project_number'), nullable=False)
     # project_id = db.Column(db.Integer, db.ForeignKey('new_project.id'), nullable=False)  # Add this line
+    @property
+    def task_table_name(self):
+        return f'project_task_{self.project_number}'
 
-    # ... rest of the model definition
-
-
-
-class ProjectTask(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(200), nullable=False)
-    status = db.Column(db.String(20), nullable=False)
-    date_created = db.Column(db.DateTime, default=datetime.utcnow)
-    project_id = db.Column(db.Integer, db.ForeignKey(
-        'new_project.id'), nullable=False)
 
 
 class Totals(db.Model):
@@ -128,34 +125,96 @@ def update_totals():
 
 
 
-def create_kanban_template(project_number):
-    # Fetch tasks related to the project_number
-    tasks = Task.query.filter_by(project_number=project_number).all()
+# def create_kanban_template(project_number):
+#     # Fetch tasks related to the project_number
+#     tasks = Task.query.filter_by(project_number=project_number).all()
 
-    # Specify the correct path to your template file within the "templates" folder
-    template_file_path = os.path.join(app.root_path, 'templates', 'kanban_template.html')
+#     # Specify the correct path to your template file within the "templates" folder
+#     template_file_path = os.path.join(app.root_path, 'templates', 'kanban_template.html')
 
-    with open(template_file_path, 'r') as file:
-        template_content = file.read()
+#     with open(template_file_path, 'r') as file:
+#         template_content = file.read()
 
-    # Manually replace placeholders in the template content
-    template_content = template_content.replace('{{ project_number }}', str(project_number))
+#     # Manually replace placeholders in the template content
+#     template_content = template_content.replace('{{ project_number }}', str(project_number))
     
-    # Render the Kanban template with the tasks
-    rendered_template = render_template_string(template_content, tasks=tasks)
+#     # Render the Kanban template with the tasks
+#     rendered_template = render_template_string(template_content, tasks=tasks)
 
-    # Create a folder for each project if it doesn't exist
-    project_folder_path = os.path.join(app.root_path, 'projects', str(project_number))
-    os.makedirs(project_folder_path, exist_ok=True)
-    print("Started creating project...")
+#     # Create a folder for each project if it doesn't exist
+#     project_folder_path = os.path.join(app.root_path, 'projects', str(project_number))
+#     os.makedirs(project_folder_path, exist_ok=True)
+#     print("Started creating project...")
 
-    # Create a unique HTML file for the Kanban template and save it in the project folder
-    file_path = os.path.join(project_folder_path, f'{project_number}.html')
-    with open(file_path, 'w') as file:
-        file.write(rendered_template)
-    print("Done creating project...")
+#     # Create a unique HTML file for the Kanban template and save it in the project folder
+#     file_path = os.path.join(project_folder_path, f'{project_number}.html')
+#     with open(file_path, 'w') as file:
+#         file.write(rendered_template)
+#     print("Done creating project...")
 
-    return file_path
+#     return file_path
+
+
+class ProjectTask(Base):
+    __tablename__ = 'project_task'
+    id = Column(Integer, primary_key=True)
+    title = Column(String(200), nullable=False)
+    status = Column(String(20), nullable=False)
+    date_created = Column(DateTime, default=datetime.utcnow)
+    project_number = Column(String(50), nullable=False)
+
+
+def create_project_table(project_number):
+    engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+    Base.metadata.create_all(bind=engine)  # Create all tables defined in the metadata
+
+    # Define the ProjectTask table within the function
+    table_name = f'project_task_{project_number}'
+    class ProjectTaskDynamic(Base):
+        __tablename__ = table_name
+        id = Column(Integer, primary_key=True)
+        title = Column(String(200), nullable=False)
+        status = Column(String(20), nullable=False)
+        date_created = Column(DateTime, default=datetime.utcnow)
+        project_number = Column(String(50), nullable=False)
+
+    # Create the ProjectTaskDynamic table
+    Base.metadata.create_all(bind=engine)
+
+    # Insert a dummy task to test the table creation
+    with Session(engine) as session:
+        dummy_task = ProjectTaskDynamic(title='Dummy Task', status='To Do', project_number=project_number)
+        session.add(dummy_task)
+        session.commit()
+
+
+@app.route('/new_project', methods=['GET', 'POST'])
+def new_project():
+    if request.method == 'POST':
+        project_name = request.form['project_name']
+        project_number = request.form['project_number']
+        author_name = request.form['author_name']
+
+        new_project = NewProject(
+            project_name=project_name,
+            project_number=project_number,
+            author_name=author_name
+        )
+
+        # Save the new project
+        db.session.add(new_project)
+        db.session.commit()
+
+        # Create a table for the project tasks
+        create_project_table(project_number)
+
+        # Update totals and progress
+        update_totals()
+        update_progress()
+
+        return redirect(url_for('index'))
+
+    return render_template('new_project.html')
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -166,21 +225,24 @@ def index():
     return render_template('index.html', totals=totals, progress_info=progress_info)
 
 
+
+
+
 # @app.route('/add', methods=['POST'])
 # def add():
 #     title = request.form.get('title')
-#     project_id = request.form.get('project_id')
+#     project_number = request.form.get('project_number')  # Use project_number instead of project_id
 
 #     # Assuming you have a date_created field in your Task model
 #     date_created = datetime.utcnow()
 
-#     # Check if project_id is None
-#     if project_id is None:
-#         # Handle the case where project_id is not provided (you may redirect or show an error message)
+#     # Check if project_number is None
+#     if project_number is None:
+#         # Handle the case where project_number is not provided (you may redirect or show an error message)
 #         return redirect(url_for('index'))
 
-#     new_task = Task(title=title, status='To Do',
-#                     date_created=date_created, project_id=project_id)
+#     # Create a new task with the provided project_number
+#     new_task = Task(title=title, status='To Do', date_created=date_created, project_number=project_number)
 #     db.session.add(new_task)
 #     db.session.commit()
 
@@ -188,7 +250,8 @@ def index():
 #     update_progress()
 #     update_totals()
 
-#     return redirect(url_for('index'))
+#     # Redirect the user to the newly created Kanban page
+#     return redirect(url_for('kanban', project_number=project_number))
 
 
 @app.route('/add', methods=['POST'])
@@ -238,51 +301,17 @@ def delete(id):
 def sign_up():
     return render_template('signin.html')
 
-# @app.route('/create_new_project', methods=['GET','POST'])
-# def create_new_project():
-#     return render_template('new_project.html')
 
 
-@app.route('/new_project', methods=['GET', 'POST'])
-def new_project():
-    if request.method == 'POST':
-        project_name = request.form['project_name']
-        project_number = request.form['project_number']
-        author_name = request.form['author_name']
 
-        new_project = NewProject(
-            project_name=project_name,
-            project_number=project_number,
-            author_name=author_name
-        )
-
-        db.session.add(new_project)
-        db.session.commit()
-
-        # Update totals
-        update_totals()
-        update_progress()
-
-        return redirect(url_for('index'))
-
-    return render_template('new_project.html')
-
-
-@app.route('/create_kanban/<project_number>', methods=['GET', 'POST'])
-def create_kanban(project_number):
-    # Get the file path of the generated Kanban template
-    file_path = create_kanban_template(project_number)
-
-    # Serve the dynamically created HTML file
-    return send_from_directory('projects', f'{project_number}/{project_number}.html')
-
-
-@app.route('/kanban/<project_number>',methods=['GET', 'POST'])
+@app.route('/kanban/<project_number>', methods=['GET', 'POST'])
 def kanban(project_number):
     # Fetch tasks related to the project_number
     tasks = Task.query.filter_by(project_number=project_number).all()
 
-    return render_template('kanban_template.html', project_number=project_number, tasks=tasks)
+    # Ensure that the tasks variable is passed to the template
+    return render_template('kanban_template.html', tasks=tasks, project_number=project_number)
+
 
 @app.route('/all_project', methods=['GET', 'POST'])
 def all_project():
@@ -290,6 +319,41 @@ def all_project():
 
     return render_template('all_projects.html', projects=projects)
 
+# @app.route('/delete_project/<int:project_id>', methods=['POST'])
+# def delete_project(project_id):
+#     # Fetch the project by ID
+#     project = NewProject.query.get(project_id)
+
+#     if request.method == 'POST':
+#         # Fetch related tasks and progress info
+#         tasks_to_delete = Task.query.filter_by(project_number=project.project_number).all()
+#         progress_info_to_delete = ProgressInfo.query.filter_by(
+#             project_id=project.id).all()
+
+#         # Delete the project and related tasks and progress info
+#         db.session.delete(project)
+#         for task in tasks_to_delete:
+#             db.session.delete(task)
+#         for progress_info in progress_info_to_delete:
+#             db.session.delete(progress_info)
+
+#         # Drop the project task table
+#         engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+#         with engine.connect() as connection:
+#             table_name = Task(task_number='Dummy Task', status='To Do', project_number=project.project_number).task_table_name
+#             connection.execute(f"DROP TABLE IF EXISTS {table_name}")
+
+#         db.session.commit()
+
+#         # Fetch the updated list of projects
+#         projects = NewProject.query.all()
+
+#         return render_template('all_projects.html', projects=projects)
+
+#     # If not a POST request, render the template with the existing projects
+#     return render_template('all_projects.html', projects=[project])
+
+# Modify the delete_project route in your Flask app
 @app.route('/delete_project/<int:project_id>', methods=['POST'])
 def delete_project(project_id):
     # Fetch the project by ID
@@ -308,6 +372,17 @@ def delete_project(project_id):
         for progress_info in progress_info_to_delete:
             db.session.delete(progress_info)
 
+        # Drop the project task table
+        engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+        table_name = f'project_task_{project.project_number}'
+
+        # Use text construct to create a SQL expression
+        drop_table_statement = text(f"DROP TABLE IF EXISTS {table_name}")
+
+        # Use connect method to get a connection, then execute the statement
+        with engine.connect() as connection:
+            connection.execute(drop_table_statement)
+
         db.session.commit()
 
         # Fetch the updated list of projects
@@ -317,7 +392,6 @@ def delete_project(project_id):
 
     # If not a POST request, render the template with the existing projects
     return render_template('all_projects.html', projects=[project])
-
 
 if __name__ == '__main__':
     with app.app_context():

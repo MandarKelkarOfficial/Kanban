@@ -15,12 +15,13 @@
 
 <div class="container">
     {% if project_number %}
-    <h1>{{ project_number }}</h1>
+    <h1>Kanban Board - Project {{ project_number }}</h1>
 {% else %}
     <h1>No project number found</h1>
 {% endif %}
 
-    <form class="form-inline" action="{{ url_for('add') }}" method="post">
+    <form class="form-inline" action="/add" method="post">
+        <input type="hidden" name="project_number" value="{{ project_number }}">
         <div class="form-group mx-sm-3 mb-2">
             <label for="title" class="sr-only">Task Title:</label>
             <input type="text" class="form-control" id="title" name="title" placeholder="Task Title" required>
@@ -53,8 +54,9 @@
             </ul>
         </div>
     </div>
+    <a href="/all_project"> Go back</a>
 </div>
-</div>
+
 
 <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>

@@ -28,7 +28,7 @@ active
                     <form action="{{ url_for('delete_project', project_id=project.id) }}" method="POST">
                         <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
                     </form>
-                    <form action="{{ url_for('create_kanban', project_number=project.project_number) }}" method="POST">
+                    <form action="{{ url_for('kanban', project_number=project.project_number) }}" method="POST">
                         <button type="submit" class="btn btn-outline-info btn-sm">View</button>
                     </form>
                 </td>
