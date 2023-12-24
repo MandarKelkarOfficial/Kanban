@@ -1,81 +1,201 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Kanban App</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-    <style>
-        body {
-            padding: 20px;
-        }
-        form {
-            margin-bottom: 20px;
-        }
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .task-list {
-            list-style-type: none;
-            padding: 0;
-        }
-        .task-list li {
-            background-color: #f8f9fa;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .task-list a {
-            color: #007bff;
-            text-decoration: none;
-            font-weight: bold;
-            margin-left: 10px;
-        }
-        .task-list li.completed {
-            background-color: #d4edda;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Kanban Board</h1>
-        <form class="form-inline" action="{{ url_for('add') }}" method="post">
-            <div class="form-group mx-sm-3 mb-2">
-                <label for="title" class="sr-only">Task Title:</label>
-                <input type="text" class="form-control" id="title" name="title" placeholder="Task Title" required>
-            </div>
-            <button type="submit" class="btn btn-primary mb-2">Add Task</button>
-        </form>
-        <div class="row">
-            <div class="col-sm">
-                <h2>To Do</h2>
-                <ul class="task-list">
-                    {% for task in tasks if task.status == 'To Do' %}
-                        <li>{{ task.title }} | <a href="{{ url_for('update', id=task.id, status='In Progress') }}">Start</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
-            <div class="col-sm">
-                <h2>In Progress</h2>
-                <ul class="task-list">
-                    {% for task in tasks if task.status == 'In Progress' %}
-                        <li class="completed">{{ task.title }} | <a href="{{ url_for('update', id=task.id, status='Done') }}">Complete</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
-            <div class="col-sm">
-                <h2>Done</h2>
-                <ul class="task-list">
-                    {% for task in tasks if task.status == 'Done' %}
-                        <li class="completed">{{ task.title }} | <a href="{{ url_for('delete', id=task.id) }}">Delete</a></li>
-                    {% endfor %}
-                </ul>
-            </div>
+{% extends 'base.html' %} {% block dashboard %}
+active
+{% endblock dashboard %}
+{% block main %}
+
+<div class="container">
+    <h2 class="main-title">Dashboard</h2>
+    <div class="row stat-cards">
+        <div class="col-md-6 col-xl-3">
+            <article class="stat-cards-item">
+                <div class="stat-cards-icon primary">
+                    <i data-feather="bar-chart-2" aria-hidden="true"></i>
+                </div>
+                <div class="stat-cards-info">
+                    <p class="stat-cards-info__num">{{ totals.total_projects }}</p>
+                    <p class="stat-cards-info__title">Total Projects</p>
+                    <p class="stat-cards-info__progress">
+                        <span
+                            class="stat-cards-info__profit {% if progress_info.total_projects | default(0) > 10 %}success{% elif progress_info.total_projects | default(0) < 10 %}warning{% else %}danger{% endif %}">
+                            {% if progress_info.total_projects | default(0) > 10 %}
+                            <i data-feather="trending-up" aria-hidden="true"></i>
+                            {% elif progress_info.total_projects | default(0) < 10 %} <i data-feather="trending-down"
+                                aria-hidden="true"></i>
+                                {% else %}
+                                <i data-feather="minus" aria-hidden="true"></i>
+                                {% endif %}
+                                {{ progress_info.total_projects | default(0) }}%
+                        </span>
+                        Last 30 days
+                    </p>
+                </div>
+            </article>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <article class="stat-cards-item">
+                <div class="stat-cards-icon warning">
+                    <i data-feather="file" aria-hidden="true"></i>
+                </div>
+                <div class="stat-cards-info">
+                    <p class="stat-cards-info__num">{{ totals.total_todos }}</p>
+                    <p class="stat-cards-info__title">Total To - Do</p>
+                    <p class="stat-cards-info__progress">
+                        <span
+                            class="stat-cards-info__profit {% if progress_info.total_todos | default(0) > 100 %}success{% elif progress_info.total_todos | default(0) > 50 %}warning{% else %}danger{% endif %}">
+                            {% if progress_info.total_todos | default(0) > 100 %}
+                            <i data-feather="trending-up" aria-hidden="true"></i>
+                            {% elif progress_info.total_todos | default(0) > 50 %}
+                            <i data-feather="trending-down" aria-hidden="true"></i>
+                            {% else %}
+                            <i data-feather="minus" aria-hidden="true"></i>
+                            {% endif %}
+                            {{ progress_info.total_todos | default(0) }}%
+                        </span>
+                        </span>
+                        Last month
+                    </p>
+                </div>
+            </article>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <article class="stat-cards-item">
+                <div class="stat-cards-icon purple">
+                    <i data-feather="file" aria-hidden="true"></i>
+                </div>
+                <div class="stat-cards-info">
+                    <p class="stat-cards-info__num">{{ totals.total_inprogress }}</p>
+                    <p class="stat-cards-info__title">Total In - Progress</p>
+                    <p class="stat-cards-info__progress">
+                        <span
+                            class="stat-cards-info__profit {% if progress_info.total_inprogress | default(0) > 100 %}success{% elif progress_info.total_inprogress | default(0) > 50 %}warning{% else %}danger{% endif %}">
+                            {% if progress_info.total_inprogress | default(0) > 100 %}
+                            <i data-feather="trending-up" aria-hidden="true"></i>
+                            {% elif progress_info.total_inprogress | default(0) > 50 %}
+                            <i data-feather="trending-down" aria-hidden="true"></i>
+                            {% else %}
+                            <i data-feather="minus" aria-hidden="true"></i>
+                            {% endif %}
+                            {{ progress_info.total_inprogress | default(0) }}%
+                        </span>
+                        Last month
+                    </p>
+                </div>
+            </article>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <article class="stat-cards-item">
+                <div class="stat-cards-icon success">
+                    <i data-feather="feather" aria-hidden="true"></i>
+                </div>
+                <div class="stat-cards-info">
+                    <p class="stat-cards-info__num">{{ totals.total_completed }}</p>
+                    <p class="stat-cards-info__title">Total completed</p>
+                    <p class="stat-cards-info__progress">
+                        <span
+                            class="stat-cards-info__profit {% if progress_info.total_completed | default(0) > 100 %}success{% elif progress_info.total_completed | default(0) > 50 %}warning{% else %}danger{% endif %}">
+                            {% if progress_info.total_completed | default(0) > 100 %}
+                            <i data-feather="trending-up" aria-hidden="true"></i>
+                            {% elif progress_info.total_completed | default(0) > 50 %}
+                            <i data-feather="trending-down" aria-hidden="true"></i>
+                            {% else %}
+                            <i data-feather="minus" aria-hidden="true"></i>
+                            {% endif %}
+                            {{ progress_info.total_completed | default(0) }}%
+                        </span>
+                        Last month
+                    </p>
+                </div>
+            </article>
         </div>
     </div>
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-</body>
-</html>
+    <div class="row">
+        <div class="col-lg-9">
+
+            <div class="users-table table-wrapper">
+                <table class="posts-table">
+                    <thead>
+                        <tr class="users-table-info">
+                            <th>
+                                <label class="users-table__checkbox ms-20">
+                                    <input type="checkbox" class="check-all">Thumbnail
+                                </label>
+                            </th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <label class="users-table__checkbox">
+                                    <input type="checkbox" class="check">
+                                    <div class="categories-table-img">
+                                        <picture>
+
+                                            <img src="static/img/categories/01.jpg" alt="category">
+                                        </picture>
+                                    </div>
+                                </label>
+                            </td>
+                            <td>
+                                Starting your traveling blog with Vasco
+                            </td>
+                            <td>
+                                <div class="pages-table-img">
+                                    <picture>
+                                        <img src="/static/img/avatar/avatar-face-04.png" alt="User Name">
+                                    </picture>
+                                    Jenny Wilson
+                                </div>
+                            </td>
+                            <td><span class="badge-pending">Pending</span></td>
+                            <td>17.04.2021</td>
+                            <td>
+                                <span class="p-relative">
+                                    <button class="dropdown-btn transparent-btn" type="button" title="More info">
+                                        <div class="sr-only">More info</div>
+                                        <i data-feather="more-horizontal" aria-hidden="true"></i>
+                                    </button>
+                                    <ul class="users-item-dropdown dropdown">
+                                        <li><a href="##">Edit</a></li>
+                                        <li><a href="##">Quick edit</a></li>
+                                        <li><a href="##">Trash</a></li>
+                                    </ul>
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-lg-3">
+
+            <article class="white-block">
+                <div class="top-cat-title">
+                    <h3>Top categories</h3>
+                    <p>28 Categories, 1400 Posts</p>
+                </div>
+                <ul class="top-cat-list">
+
+
+                    <li>
+                        <a href="##">
+                            <div class="top-cat-list__title">
+                                Nature <span>8.2k</span>
+                            </div>
+                            <div class="top-cat-list__subtitle">
+                                Wildlife animal articles <span class="warning">+472</span>
+                            </div>
+                        </a>
+                    </li>
+
+                </ul>
+            </article>
+        </div>
+    </div>
+</div>
+<!-- </main> -->
+{% endblock main %}

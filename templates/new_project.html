@@ -1,0 +1,34 @@
+{% extends 'base.html' %}{% block newproject %}
+    active
+{% endblock newproject %}
+{% block main %}
+
+
+<div class="container mt-5">
+    <div class="stat-cards-item mx-auto d-flex justify-center align-center" style="max-width: 500px;">
+        <div class="card-header text-center">
+            <h1 class="mb-0 main-title ">New Project Form</h1>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="/new_project">
+                <div class="mb-3 ">
+                    <label for="project_name" class="form-label font-weight-bold">Project Name:</label>
+                    <input type="text" class="form-control" id="project_name" name="project_name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="project_number" class="form-label font-weight-bold">Project Number:</label>
+                    <input type="text" class="form-control" id="project_number" name="project_number" required>
+                </div>
+                <div class="mb-3">
+                    <label for="author_name" class="form-label font-weight-bold">Author Name:</label>
+                    <input type="text" class="form-control" id="author_name" name="author_name" required>
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>  
+
+{% endblock main %}

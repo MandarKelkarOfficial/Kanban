@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Kanban App</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+</head>
+<body>
+
+<div class="container">
+    {% if project_number %}
+    <h1>{{ project_number }}</h1>
+{% else %}
+    <h1>No project number found</h1>
+{% endif %}
+
+    <form class="form-inline" action="{{ url_for('add') }}" method="post">
+        <div class="form-group mx-sm-3 mb-2">
+            <label for="title" class="sr-only">Task Title:</label>
+            <input type="text" class="form-control" id="title" name="title" placeholder="Task Title" required>
+        </div>
+        <button type="submit" class="btn btn-primary mb-2">Add Task</button>
+    </form>
+    <div class="row">
+        <div class="col-sm">
+            <h2>To Do</h2>
+            <ul class="task-list">
+                {% for task in tasks if task.status == 'To Do' %}
+                    <li>{{ task.title }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-sm">
+            <h2>In Progress</h2>
+            <ul class="task-list">
+                {% for task in tasks if task.status == 'In Progress' %}
+                    <li class="completed">{{ task.title }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-sm">
+            <h2>Done</h2>
+            <ul class="task-list">
+                {% for task in tasks if task.status == 'Done' %}
+                    <li class="completed">{{ task.title }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+<script>
+    // Enable drag-and-drop for tasks
+    $(function() {
+        $(".kanban-column ul").sortable({
+            connectWith: ".task-list",
+            update: function(event, ui) {
+                // Get the task ID and the new status
+                var taskId = ui.item.attr('id').split('-')[1];
+                var newStatus = ui.item.parent().attr('id').split('-')[0];
+
+                // Update the task status using AJAX
+                $.ajax({
+                    type: 'GET',
+                    url: '/update/' + taskId + '/' + newStatus,
+                    success: function(response) {
+                        console.log(response);
+                    },
+                    error: function(error) {
+                        console.log(error);
+                    }
+                });
+            }
+        }).disableSelection();
+    });
+</script>
+</body>
+</html>
