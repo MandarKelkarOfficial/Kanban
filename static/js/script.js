@@ -50,51 +50,177 @@ function swipeInfo(event) {
   };
 }
 
+
+
+
+function updateTaskStatus(taskId, targetStatus) {
+  console.log('Updating task status. Task ID:', taskId, 'Target Status:', targetStatus);
+
+  // Perform an AJAX request to update the task status on the server
+  $.ajax({
+    url: '/update/' + taskId + '/' + targetStatus,
+    type: 'POST',
+    data: { title: 'dummy' },
+    success: function () {
+      console.log('Task status updated successfully.');
+    },
+    error: function (error) {
+      console.error('Error updating task status:', error);
+    },
+  });
+}
+
+
 function allowDrop(thisTarget, ev) {
   ev.preventDefault();
   ev.dataTransfer.dropEffect = 'move';
   var target = ev.target;
   var info = swipeInfo(ev);
-  var superTarget = (target.parentNode).parentNode;
+  var superTarget = target.parentNode.parentNode;
 
   if (target && superTarget !== dragEl && superTarget.className == 'task') {
-      // Check if the drop target is a different column
-      if (superTarget.parentNode.id !== dragEl.parentNode.id) {
-          var taskId = superTarget.querySelector('.content').getAttribute('data-id');
-          var targetStatus = superTarget.parentNode.id.split('-')[1]; // Assuming your column IDs are like "drag1", "drag2", ...
+    // Check if the drop target is a different column
+    if (superTarget.parentNode.id !== dragEl.parentNode.id) {
+      // Retrieve the task ID from the data-id attribute
+      var taskId = dragEl.getAttribute('data-id');
 
-          // Update the task status in the database
-          updateTaskStatus(taskId, targetStatus);
+      // Determine the target status based on the drop target
+      var targetStatus;
+      switch (superTarget.parentNode.id) {
+        case 'drag1':
+          targetStatus = 'To Do';
+          break;
+        case 'drag2':
+          targetStatus = 'In Progress';
+          break;
+        case 'drag3':
+          targetStatus = 'Done';
+          break;
+        // Add more cases if you have additional columns
       }
 
-      // Continue with your existing code for sorting
-      if (info.direction.y === "down") {
-          insertAfter(dragEl, superTarget);
-      }
-      if (info.direction.y === "up") {
-          thisTarget.insertBefore(dragEl, superTarget);
-      }
+      // Update the task status using the retrieved ID and status
+      updateTaskStatus(taskId, targetStatus);
+    }
+
+    // Continue with your existing code for sorting
+    if (info.direction.y === 'down') {
+      insertAfter(dragEl, superTarget);
+    }
+    if (info.direction.y === 'up') {
+      thisTarget.insertBefore(dragEl, superTarget);
+    }
   }
 }
+
+
+
 
 function drag(target, event) {
   dragEl = event.target;
   originalPosition = {
-    // И его первоночальную позицию
     x: event.clientX,
     y: event.clientY,
   };
   nextEl = dragEl.nextSibling;
   event.dataTransfer.setData("text", target.id);
+
+  // Store the task ID as a data attribute
+  event.dataTransfer.setData("task-id", target.getAttribute("data-id"));
 }
+
+// function drop(target, event) {
+//   var data = event.dataTransfer.getData("text");
+//   var taskId = event.dataTransfer.getData("task-id"); // Retrieve the task ID
+
+//   // Check if the dragged element exists
+//   var draggedElement = document.getElementById(data);
+//   if (!draggedElement) {
+//     console.error('Error: Dragged element not found.');
+//     return;
+//   }
+
+//   if (event.target !== dragEl && event.target.className == "dragBox") {
+//     // Remove the cloned element from the "Done" column
+//     if (target.id === 'drag3') {
+//       draggedElement.parentNode.removeChild(draggedElement);
+//     }
+
+//     // Clone the dragged element
+//     var newElement = draggedElement.cloneNode(true);
+//     newElement.id = "new-id"; // Change the ID if needed
+//     target.appendChild(newElement); // Append the cloned element
+
+//     // Determine the target status based on the drop target
+//     var targetStatus;
+//     switch (target.id) {
+//       case 'drag1':
+//         targetStatus = 'To Do';
+//         break;
+//       case 'drag2':
+//         targetStatus = 'In Progress';
+//         break;
+//       case 'drag3':
+//         targetStatus = 'Done';
+//         break;
+//       // Add more cases if you have additional columns
+//       default:
+//         console.error('Error: Unknown target column.');
+//         return;
+//     }
+
+//     // Send an AJAX request to update the task status
+//     updateTaskStatus(taskId, targetStatus);
+//   }
+
+//   event.preventDefault();
+// }
+
 
 function drop(target, event) {
   var data = event.dataTransfer.getData("text");
-  if (event.target !== dragEl && event.target.className == "dragBox") {
-    target.appendChild(document.getElementById(data));
+  var taskId = event.dataTransfer.getData("task-id"); // Retrieve the task ID
+
+  // Check if the dragged element exists
+  var draggedElement = document.getElementById(data);
+  if (!draggedElement) {
+    console.error('Error: Dragged element not found.');
+    return;
   }
+
+  if (event.target !== dragEl && event.target.className == "dragBox") {
+    // Remove the dragged element from its current column
+    draggedElement.parentNode.removeChild(draggedElement);
+
+    // Append the dragged element to the new column
+    target.appendChild(draggedElement);
+
+    // Determine the target status based on the drop target
+    var targetStatus;
+    switch (target.id) {
+      case 'drag1':
+        targetStatus = 'To Do';
+        break;
+      case 'drag2':
+        targetStatus = 'In Progress';
+        break;
+      case 'drag3':
+        targetStatus = 'Done';
+        break;
+      // Add more cases if you have additional columns
+      default:
+        console.error('Error: Unknown target column.');
+        return;
+    }
+
+    // Send an AJAX request to update the task status
+    updateTaskStatus(taskId, targetStatus);
+  }
+
   event.preventDefault();
 }
+
+
 
 var thisTask;
 function expandCard(thisCard) {

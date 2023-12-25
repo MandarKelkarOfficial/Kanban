@@ -254,35 +254,28 @@ def add():
     # Redirect the user to the newly created Kanban page
     return redirect(url_for('kanban', project_number=project_number))
 
-
 @app.route('/update/<int:task_id>/<status>', methods=['POST'])
 def update(task_id, status):
     # Update the task status in your database here
     title = request.form.get('title')
-    
-    # Get project_number from the URL parameters
-    project_number = request.view_args['project_number']
 
     # Assuming you have a date_created field in your Task model
     date_created = datetime.utcnow()
 
-    # Check if project_number is None
-    if project_number is None:
-        # Handle the case where project_number is not provided (you may redirect or show an error message)
-        return redirect(url_for('index'))
+    # Assuming you have a Task model
+    task = Task.query.get(task_id)
 
-    # Create a new task with the provided project_number
-    # Replace with your logic to get the project number
-    update_task = Task(title=title, status='In Progress', date_created=date_created, project_number=project_number)
-    db.session.add(update_task)
-    db.session.commit()
+    # Check if the task exists
+    if task:
+        task.status = status
+        task.date_created = date_created
+        db.session.commit()
 
-    # After adding the new task, update the progress and totals
-    update_progress()
-    update_totals()
+        # After updating the task, update the progress and totals
+        update_progress()
+        update_totals()
 
-    return redirect(url_for('kanban', project_number=project_number))
-
+    return redirect(url_for('kanban', project_number=task.project_number))
 
 
 @app.route('/delete/<int:id>')
@@ -302,6 +295,7 @@ def sign_up():
 def kanban(project_number):
     # Fetch tasks related to the project_number
     tasks = Task.query.filter_by(project_number=project_number).all()
+    # tasks_id = Task.query.filter_by(id)
 
     # Ensure that the tasks variable is passed to the template
     return render_template('test_kanban.html', tasks=tasks, project_number=project_number)

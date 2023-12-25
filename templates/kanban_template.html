@@ -78,38 +78,7 @@
     <title>Simple Kanban App</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <style>
-        .container {
-            margin-top: 20px;
-        }
-
-        .task-list {
-            min-height: 100px;
-            list-style-type: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .task-list li {
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            margin: 5px;
-            padding: 10px;
-            cursor: move;
-        }
-
-        .row {
-            margin-top: 20px;
-        }
-
-        h2 {
-            text-align: center;
-        }
-
-        .btn {
-            margin-top: 10px;
-        }
-    </style>
+<link rel="stylesheet" href="/static/css/style.css">
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
@@ -117,86 +86,115 @@
 </head>
 <body>
 
-<div class="container">
-    {% if project_number %}
-    <h1>Kanban Board - Project {{ project_number }}</h1>
-    {% else %}
-    <h1>No project number found</h1>
-    {% endif %}
-
-    <form class="form-inline" action="/add" method="post">
-        <input type="hidden" name="project_number" value="{{ project_number }}">
-        <div class="form-group mx-sm-3 mb-2">
-            <label for="title" class="sr-only">Task Title:</label>
-            <input type="text" class="form-control" id="title" name="title" placeholder="Task Title" required>
-        </div>
-        <button type="submit" class="btn btn-primary mb-2">Add Task</button>
+ <!-- Latest Sortable -->
+ <script src="//rubaxa.github.io/Sortable/Sortable.js"></script>
+ <div class="page">
+    <form action="/add" method="post">
+      <input
+        type="hidden"
+        name="project_number"
+        value="{{ project_number }}"
+      />
+      <input type="text" id="input-field" name="title" required />
+      <input type="submit" value="Add Task" />
     </form>
+    <!-- <section class="tasks"></section> -->
+  </div>
 
-    <div class="row">
-        <div class="col-sm">
-            <h2>To Do</h2>
-            <ul class="task-list" id="todo-list">
-                {% for task in tasks if task.status == 'To Do' %}
-                    <li data-id="{{ task.id }}">{{ task.title }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        <div class="col-sm">
-            <h2>In Progress</h2>
-            <ul class="task-list" id="in-progress-list">
-                {% for task in tasks if task.status == 'In Progress' %}
-                    <li data-id="{{ task.id }}">{{ task.title }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-        <div class="col-sm">
-            <h2>Done</h2>
-            <ul class="task-list" id="done-list">
-                {% for task in tasks if task.status == 'Done' %}
-                    <li data-id="{{ task.id }}">{{ task.title }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-    <a href="/all_project"> Go back</a>
-</div>
-
-<script>
-    $(function () {
-        // Make task items draggable
-        $(".task-list li").draggable({
-            helper: "clone",
-            revert: "invalid"
-        });
-
-        // Make task lists droppable
-        $(".task-list").droppable({
-            accept: ".task-list li",
-            drop: function (event, ui) {
-                var taskId = ui.helper.data("id");
-                var targetListId = $(this).attr("id");
-                updateTaskStatus(taskId, targetListId);
-                $(this).append(ui.helper.clone());
-                ui.helper.remove();
-            }
-        });
-
-        function updateTaskStatus(taskId, targetListId) {
-            // Perform an AJAX request to update the task status in the server
-            $.ajax({
-                url: "/update_task_status",
-                type: "POST",
-                data: { task_id: taskId, target_list_id: targetListId },
-                success: function (data) {
-                    console.log("Task status updated successfully.");
-                },
-                error: function (error) {
-                    console.error("Error updating task status:", error);
-                }
-            });
-        }
-    });
-</script>
+ <div class="modal-overlay"></div>
+ <div class="wrap" id="multi">
+     <div class="dragBox" id="drag1">
+        {% for task in tasks if task.status == 'To Do' %}
+         <div id="task1" class="task" onclick="expandCard(this, event)">
+             <div class="cardMini ">
+                 <div class="header color-green"></div>
+                 <!-- <div class="content">Task Content...</div> -->
+                 <div class="content" data-id="{{ task.id }}">
+                    {{ task.title }}
+                    <div class="actions">
+                      <i class="material-icons"> edit</i>
+                      <i class="material-icons">insert_link</i>
+                      <i class="material-icons">attach_file</i>
+                    </div>
+                  </div>
+             </div>
+             <div class="cardFull">
+                 <div class="header color-green"></div>
+                 <div class="content" data-id="{{ task.id }}">
+                    {{ task.title }}
+                    <div class="actions">
+                      <i class="material-icons"> edit</i>
+                      <i class="material-icons">insert_link</i>
+                      <i class="material-icons">attach_file</i>
+                    </div>
+                  </div>
+             </div>
+         </div>
+         {% endfor %}
+     </div>
+     <div class="dragBox" id="drag2" >
+        {% for task in tasks if task.status == 'In Progress' %}
+         <div id="task2" class="task" onclick="expandCard(this, event)">
+             <div class="cardMini ">
+                 <div class="header color-yellow"></div>
+                 <!-- <div class="content">Task Content...</div> -->
+                 <div class="content" data-id="{{ task.id }}">
+                    {{ task.title }}
+                    <div class="actions">
+                      <i class="material-icons"> edit</i>
+                      <i class="material-icons">insert_link</i>
+                      <i class="material-icons">attach_file</i>
+                    </div>
+                  </div>
+             </div>
+             <div class="cardFull">
+                 <div class="header color-yellow"></div>
+                 <div class="content" data-id="{{ task.id }}">
+                    {{ task.title }}
+                    <div class="actions">
+                      <i class="material-icons"> edit</i>
+                      <i class="material-icons">insert_link</i>
+                      <i class="material-icons">attach_file</i>
+                    </div>
+                  </div>
+             </div>
+         </div>
+         {% endfor %}
+     </div>
+     <div class="dragBox" id="drag3" >
+        {% for task in tasks if task.status == 'Done' %}
+         <div  id="task3" class="task" onclick="expandCard(this, event)">
+             <div class="cardMini ">
+                 <div class="header color-red"></div>
+                 <!-- <div class="content">Task Content...</div> -->
+                 <div class="content" data-id="{{ task.id }}">
+                    {{ task.title }}
+                    <div class="actions">
+                      <i class="material-icons"> edit</i>
+                      <i class="material-icons">insert_link</i>
+                      <i class="material-icons">attach_file</i>
+                    </div>
+                  </div>
+             </div>
+             <div class="cardFull">
+                 <div class="header color-red"></div>
+                 <div class="content" data-id="{{ task.id }}">
+                    {{ task.title }}
+                    <div class="actions">
+                      <i class="material-icons"> edit</i>
+                      <i class="material-icons">insert_link</i>
+                      <i class="material-icons">attach_file</i>
+                    </div>
+                  </div>
+             </div>
+         </div>
+         {% endfor %}
+     </div>
+    
+ </div>
+ <script src="/static/js/script.js"></script>
 </body>
 </html>
+
+
+
