@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/style.css" />
+
+    <title>KANBAN - TEST</title>
+  </head>
+
+  <body>
+    <!-- Latest Sortable -->
+    <script src="//rubaxa.github.io/Sortable/Sortable.js"></script>
+    {% if project_number %}
+    <h1 style="text-align: center">
+      Kanban Board - Project {{ project_number }}
+    </h1>
+    {% else %}
+    <h1>No project number found</h1>
+    {% endif %}
+
+    <!-- <div class="container"> -->
+    <div class="page">
+      <form action="/add" method="post">
+        <input
+          type="hidden"
+          name="project_number"
+          value="{{ project_number }}"
+        />
+        <input type="text" id="input-field" name="title" required />
+        <input type="submit" value="Add Task" />
+      </form>
+      <!-- <section class="tasks"></section> -->
+    </div>
+    <div class="modal-overlay"></div>
+    <table class="table">
+      <thead>
+        <tr>
+          <td><h2 style="text-align: center">To Do</h2></td>
+          <td><h2 style="text-align: center">In Progress</h2></td>
+          <td><h2 style="text-align: center">Completed</h2></td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="dragBox" id="drag1">
+            {% for task in tasks if task.status == 'To Do' %}
+            <div id="task1" class="task" onclick="expandCard(this, event)">
+              <div class="cardMini">
+                <div class="header color-green"></div>
+                <!-- <li >{{ task.title }}</li> -->
+                <div class="content" data-id="{{ task.id }}">
+                  {{ task.title }}
+                  <div class="actions">
+                    <i class="material-icons"> edit</i>
+                    <i class="material-icons">insert_link</i>
+                    <i class="material-icons">attach_file</i>
+                  </div>
+                </div>
+              </div>
+              <div class="cardFull">
+                <div class="header color-green"></div>
+                <div class="content" data-id="{{ task.id }}">
+                  {{ task.title }}
+                  <div class="actions">
+                    <i class="material-icons"> edit</i>
+                    <i class="material-icons">insert_link</i>
+                    <i class="material-icons">attach_file</i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </td>
+          <td class="dragBox" id="drag2">
+            {% for task in tasks if task.status == 'In Progress' %}
+            <div id="task2" class="task" onclick="expandCard(this, event)">
+              <div class="cardMini">
+                <div class="header color-yellow"></div>
+
+                <div class="content" data-id="{{ task.id }}">
+                  {{ task.title }}
+                </div>
+              </div>
+              <div class="cardFull">
+                <div class="header color-yellow"></div>
+              </div>
+            </div>
+            {% endfor %}
+          </td>
+          <td class="dragBox" id="drag3">
+            {% for task in tasks if task.status == 'Done' %}
+            <div id="task3" class="task" onclick="expandCard(this, event)">
+              <div class="cardMini">
+                <div class="header color-red"></div>
+                <div class="content" data-id="{{ task.id }}">
+                  {{ task.title }}
+                </div>
+                <!-- <li </li> -->
+              </div>
+              <div class="cardFull">
+                <div class="header color-red"></div>
+              </div>
+            </div>
+            {% endfor %}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <a href="/new_project">Go back</a>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <!-- ... (your existing code) ... -->
+
+    <script>
+      // Your existing JavaScript code
+
+      function updateTaskStatus(taskId, targetStatus) {
+        // Get the title and project_number from the task
+        var title = document.getElementById(taskId).innerText;
+        var project_number = document
+          .getElementById(taskId)
+          .getAttribute("data-project-number");
+
+        // Perform an AJAX request to update the task status in the server
+        $.ajax({
+          url: "/update/" + taskId + "/" + targetStatus,
+          type: "POST", // Change to POST
+          data: { title: title, project_number: project_number }, // Include title and project_number
+          success: function (data) {
+            console.log("Task status updated successfully.");
+          },
+          error: function (error) {
+            console.error("Error updating task status:", error);
+          },
+        });
+      }
+
+      [].slice
+        .call(document.getElementsByClassName("dragBox"))
+        .forEach(function (itemEl) {
+          itemEl.ondrop = function () {
+            drop(this, event);
+          };
+          itemEl.ondragover = function () {
+            allowDrop(this, event);
+          };
+          [].slice.call(itemEl.children).forEach(function (taskEl) {
+            taskEl.draggable = true;
+
+            taskEl.ondragstart = function () {
+              drag(this, event);
+            };
+          });
+        });
+
+      function allowDrop(thisTarget, ev) {
+        ev.preventDefault();
+        ev.dataTransfer.dropEffect = "move";
+        var target = ev.target;
+        var info = swipeInfo(ev);
+        var superTarget = target.parentNode.parentNode;
+
+        if (
+          target &&
+          superTarget !== dragEl &&
+          superTarget.className == "task"
+        ) {
+          // Check if the drop target is a different column
+          if (superTarget.parentNode.id !== dragEl.parentNode.id) {
+            var taskId = superTarget
+              .querySelector(".content")
+              .getAttribute("data-id");
+            var targetStatus = superTarget.parentNode.id.split("-")[1]; // Assuming your column IDs are like "drag1", "drag2", ...
+
+            // Update the task status in the database
+            updateTaskStatus(taskId, targetStatus);
+          }
+
+          // Continue with your existing code for sorting
+          if (info.direction.y === "down") {
+            insertAfter(dragEl, superTarget);
+          }
+          if (info.direction.y === "up") {
+            thisTarget.insertBefore(dragEl, superTarget);
+          }
+        }
+      }
+
+      // ... (rest of your existing code) ...
+    </script>
+
+    <!-- ... (rest of your HTML) ... -->
+
+    <script src="/static/js/script.js"></script>
+  </body>
+</html>
