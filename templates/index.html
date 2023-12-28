@@ -41,10 +41,10 @@ active
                     <p class="stat-cards-info__title">Total To - Do</p>
                     <p class="stat-cards-info__progress">
                         <span
-                            class="stat-cards-info__profit {% if progress_info.total_todos | default(0) > 100 %}success{% elif progress_info.total_todos | default(0) > 50 %}warning{% else %}danger{% endif %}">
-                            {% if progress_info.total_todos | default(0) > 100 %}
+                            class="stat-cards-info__profit {% if progress_info.total_todos | default(0) > 10 %}success{% elif progress_info.total_todos | default(0) < 10 %}warning{% else %}danger{% endif %}">
+                            {% if progress_info.total_todos | default(0) > 10 %}
                             <i data-feather="trending-up" aria-hidden="true"></i>
-                            {% elif progress_info.total_todos | default(0) > 50 %}
+                            {% elif progress_info.total_todos | default(0) < 10 %}
                             <i data-feather="trending-down" aria-hidden="true"></i>
                             {% else %}
                             <i data-feather="minus" aria-hidden="true"></i>
@@ -67,10 +67,10 @@ active
                     <p class="stat-cards-info__title">Total In - Progress</p>
                     <p class="stat-cards-info__progress">
                         <span
-                            class="stat-cards-info__profit {% if progress_info.total_inprogress | default(0) > 100 %}success{% elif progress_info.total_inprogress | default(0) > 50 %}warning{% else %}danger{% endif %}">
-                            {% if progress_info.total_inprogress | default(0) > 100 %}
+                            class="stat-cards-info__profit {% if progress_info.total_inprogress | default(0) > 10 %}success{% elif progress_info.total_inprogress | default(0) < 10 %}warning{% else %}danger{% endif %}">
+                            {% if progress_info.total_inprogress | default(0) > 10 %}
                             <i data-feather="trending-up" aria-hidden="true"></i>
-                            {% elif progress_info.total_inprogress | default(0) > 50 %}
+                            {% elif progress_info.total_inprogress | default(0) < 10 %}
                             <i data-feather="trending-down" aria-hidden="true"></i>
                             {% else %}
                             <i data-feather="minus" aria-hidden="true"></i>
@@ -92,10 +92,10 @@ active
                     <p class="stat-cards-info__title">Total completed</p>
                     <p class="stat-cards-info__progress">
                         <span
-                            class="stat-cards-info__profit {% if progress_info.total_completed | default(0) > 100 %}success{% elif progress_info.total_completed | default(0) > 50 %}warning{% else %}danger{% endif %}">
-                            {% if progress_info.total_completed | default(0) > 100 %}
+                            class="stat-cards-info__profit {% if progress_info.total_completed | default(0) > 10 %}success{% elif progress_info.total_completed | default(0) < 10 %}warning{% else %}danger{% endif %}">
+                            {% if progress_info.total_completed | default(0) > 10 %}
                             <i data-feather="trending-up" aria-hidden="true"></i>
-                            {% elif progress_info.total_completed | default(0) > 50 %}
+                            {% elif progress_info.total_completed | default(0) < 10 %}
                             <i data-feather="trending-down" aria-hidden="true"></i>
                             {% else %}
                             <i data-feather="minus" aria-hidden="true"></i>

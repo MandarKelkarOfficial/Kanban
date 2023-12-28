@@ -272,7 +272,6 @@ body {
 
 .table .task {
   cursor: move;
-  
 }
 
 .table .cardMini {
@@ -306,7 +305,6 @@ body {
   box-sizing: border-box;
   padding: 10px;
 }
-
 
 .page {
   width: 800px;
@@ -408,7 +406,7 @@ form input[type="submit"]:focus,
   font-size: 0.9rem;
 }
 
-.actions {
+/* .actions {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   margin-top: 12px;
   font-size: 8px;
@@ -417,5 +415,19 @@ form input[type="submit"]:focus,
   color: #b0bec5;
   padding: 8px;
   box-sizing: border-box;
-}
+} */
 
+.actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin-top: 12px;
+  /* margin-left: 10px; */
+  font-size: 8px;
+  line-height: normal;
+  width: 100%;
+  color: #b0bec5;
+  padding: 8px;
+  box-sizing: border-box;
+}

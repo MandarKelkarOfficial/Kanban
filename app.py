@@ -1,24 +1,17 @@
 from flask import Flask, render_template, render_template_string, request, redirect, send_from_directory, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import *
-from sqlalchemy.orm import declarative_base
-from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
-import os
+
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///kanban.db'
 db = SQLAlchemy(app)
-# app.static_folder = 'projects'
-Base = declarative_base()
 
 
-# class NewProject(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     project_name = db.Column(db.String(100), nullable=False)
-#     project_number = db.Column(db.String(50), unique=True, nullable=False)
-#     author_name = db.Column(db.String(100), nullable=False)
-#     tasks = db.relationship('Task', backref='project', lazy=True)
+
+
 
 class NewProject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -35,11 +28,6 @@ class Task(db.Model):
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     project_number = db.Column(db.String(50), db.ForeignKey(
         'new_project.project_number'), nullable=False)
-    # project_id = db.Column(db.Integer, db.ForeignKey('new_project.id'), nullable=False)  # Add this line
-
-    @property
-    def task_table_name(self):
-        return f'project_task_{self.project_number}'
 
 
 class Totals(db.Model):
@@ -83,10 +71,7 @@ def update_progress():
     progress_inprogress = (total_inprogress / target) * 100
     progress_completed = (total_completed / target) * 100
 
-    print("Total Projects:", total_projects)
-    print("Total To-Do:", total_todos)
-    print("Total In-Progress:", total_inprogress)
-    print("Total Completed:", total_completed)
+
 
     # Store progress information in the database
     progress_info = ProgressInfo(
@@ -120,70 +105,20 @@ def update_totals():
     db.session.commit()
 
 
-# def create_kanban_template(project_number):
-#     # Fetch tasks related to the project_number
-#     tasks = Task.query.filter_by(project_number=project_number).all()
-
-#     # Specify the correct path to your template file within the "templates" folder
-#     template_file_path = os.path.join(app.root_path, 'templates', 'kanban_template.html')
-
-#     with open(template_file_path, 'r') as file:
-#         template_content = file.read()
-
-#     # Manually replace placeholders in the template content
-#     template_content = template_content.replace('{{ project_number }}', str(project_number))
-
-#     # Render the Kanban template with the tasks
-#     rendered_template = render_template_string(template_content, tasks=tasks)
-
-#     # Create a folder for each project if it doesn't exist
-#     project_folder_path = os.path.join(app.root_path, 'projects', str(project_number))
-#     os.makedirs(project_folder_path, exist_ok=True)
-#     print("Started creating project...")
-
-#     # Create a unique HTML file for the Kanban template and save it in the project folder
-#     file_path = os.path.join(project_folder_path, f'{project_number}.html')
-#     with open(file_path, 'w') as file:
-#         file.write(rendered_template)
-#     print("Done creating project...")
-
-#     return file_path
 
 
-class ProjectTask(Base):
-    __tablename__ = 'project_task'
-    id = Column(Integer, primary_key=True)
-    title = Column(String(200), nullable=False)
-    status = Column(String(20), nullable=False)
-    date_created = Column(DateTime, default=datetime.utcnow)
-    project_number = Column(String(50), nullable=False)
 
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    # tasks = Task.query.all()
+    totals = Totals.query.first()
+    progress_info = ProgressInfo.query.order_by(
+        ProgressInfo.timestamp.desc()).first()
+    return render_template('index.html', totals=totals, progress_info=progress_info)
 
-def create_project_table(project_number):
-    engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
-    # Create all tables defined in the metadata
-    Base.metadata.create_all(bind=engine)
-
-    # Define the ProjectTask table within the function
-    table_name = f'project_task_{project_number}'
-
-    class ProjectTaskDynamic(Base):
-        __tablename__ = table_name
-        id = Column(Integer, primary_key=True)
-        title = Column(String(200), nullable=False)
-        status = Column(String(20), nullable=False)
-        date_created = Column(DateTime, default=datetime.utcnow)
-        project_number = Column(String(50), nullable=False)
-
-    # Create the ProjectTaskDynamic table
-    Base.metadata.create_all(bind=engine)
-
-    # Insert a dummy task to test the table creation
-    with Session(engine) as session:
-        dummy_task = ProjectTaskDynamic(
-            title='Dummy Task', status='To Do', project_number=project_number)
-        session.add(dummy_task)
-        session.commit()
+@app.route('/sign_up', methods=['GET', 'POST'])
+def sign_up():
+    return render_template('signin.html')
 
 
 @app.route('/new_project', methods=['GET', 'POST'])
@@ -204,26 +139,15 @@ def new_project():
         db.session.commit()
 
         # Create a table for the project tasks
-        create_project_table(project_number)
+        # create_project_table(project_number)
 
         # Update totals and progress
         update_totals()
         update_progress()
 
-        return redirect(url_for('index'))
+        return redirect(url_for('all_project'))
 
     return render_template('new_project.html')
-
-
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    # tasks = Task.query.all()
-    totals = Totals.query.first()
-    progress_info = ProgressInfo.query.order_by(
-        ProgressInfo.timestamp.desc()).first()
-    return render_template('index.html', totals=totals, progress_info=progress_info)
-
-
 
 
 
@@ -286,18 +210,10 @@ def delete(id):
     return redirect(url_for('kanban'))
 
 
-@app.route('/sign_up', methods=['GET', 'POST'])
-def sign_up():
-    return render_template('signin.html')
-
-
 @app.route('/kanban/<project_number>', methods=['GET', 'POST'])
 def kanban(project_number):
     # Fetch tasks related to the project_number
     tasks = Task.query.filter_by(project_number=project_number).all()
-    # tasks_id = Task.query.filter_by(id)
-
-    # Ensure that the tasks variable is passed to the template
     return render_template('test_kanban.html', tasks=tasks, project_number=project_number)
 
 

@@ -1,4 +1,3 @@
-
 "use strict";
 galPicker();
 var originalPosition = null;
@@ -50,51 +49,52 @@ function swipeInfo(event) {
   };
 }
 
-
-
-
 function updateTaskStatus(taskId, targetStatus) {
-  console.log('Updating task status. Task ID:', taskId, 'Target Status:', targetStatus);
+  console.log(
+    "Updating task status. Task ID:",
+    taskId,
+    "Target Status:",
+    targetStatus
+  );
 
   // Perform an AJAX request to update the task status on the server
   $.ajax({
-    url: '/update/' + taskId + '/' + targetStatus,
-    type: 'POST',
-    data: { title: 'dummy' },
+    url: "/update/" + taskId + "/" + targetStatus,
+    type: "POST",
+    data: { title: "dummy" },
     success: function () {
-      console.log('Task status updated successfully.');
+      console.log("Task status updated successfully.");
     },
     error: function (error) {
-      console.error('Error updating task status:', error);
+      console.error("Error updating task status:", error);
     },
   });
 }
 
-
 function allowDrop(thisTarget, ev) {
   ev.preventDefault();
-  ev.dataTransfer.dropEffect = 'move';
+  ev.dataTransfer.dropEffect = "move";
   var target = ev.target;
   var info = swipeInfo(ev);
   var superTarget = target.parentNode.parentNode;
 
-  if (target && superTarget !== dragEl && superTarget.className == 'task') {
+  if (target && superTarget !== dragEl && superTarget.className == "task") {
     // Check if the drop target is a different column
     if (superTarget.parentNode.id !== dragEl.parentNode.id) {
       // Retrieve the task ID from the data-id attribute
-      var taskId = dragEl.getAttribute('data-id');
+      var taskId = dragEl.getAttribute("data-id");
 
       // Determine the target status based on the drop target
       var targetStatus;
       switch (superTarget.parentNode.id) {
-        case 'drag1':
-          targetStatus = 'To Do';
+        case "drag1":
+          targetStatus = "To Do";
           break;
-        case 'drag2':
-          targetStatus = 'In Progress';
+        case "drag2":
+          targetStatus = "In Progress";
           break;
-        case 'drag3':
-          targetStatus = 'Done';
+        case "drag3":
+          targetStatus = "Done";
           break;
         // Add more cases if you have additional columns
       }
@@ -104,17 +104,14 @@ function allowDrop(thisTarget, ev) {
     }
 
     // Continue with your existing code for sorting
-    if (info.direction.y === 'down') {
+    if (info.direction.y === "down") {
       insertAfter(dragEl, superTarget);
     }
-    if (info.direction.y === 'up') {
+    if (info.direction.y === "up") {
       thisTarget.insertBefore(dragEl, superTarget);
     }
   }
 }
-
-
-
 
 function drag(target, event) {
   dragEl = event.target;
@@ -176,7 +173,6 @@ function drag(target, event) {
 //   event.preventDefault();
 // }
 
-
 function drop(target, event) {
   var data = event.dataTransfer.getData("text");
   var taskId = event.dataTransfer.getData("task-id"); // Retrieve the task ID
@@ -184,7 +180,7 @@ function drop(target, event) {
   // Check if the dragged element exists
   var draggedElement = document.getElementById(data);
   if (!draggedElement) {
-    console.error('Error: Dragged element not found.');
+    console.error("Error: Dragged element not found.");
     return;
   }
 
@@ -198,18 +194,18 @@ function drop(target, event) {
     // Determine the target status based on the drop target
     var targetStatus;
     switch (target.id) {
-      case 'drag1':
-        targetStatus = 'To Do';
+      case "drag1":
+        targetStatus = "To Do";
         break;
-      case 'drag2':
-        targetStatus = 'In Progress';
+      case "drag2":
+        targetStatus = "In Progress";
         break;
-      case 'drag3':
-        targetStatus = 'Done';
+      case "drag3":
+        targetStatus = "Done";
         break;
       // Add more cases if you have additional columns
       default:
-        console.error('Error: Unknown target column.');
+        console.error("Error: Unknown target column.");
         return;
     }
 
@@ -219,8 +215,6 @@ function drop(target, event) {
 
   event.preventDefault();
 }
-
-
 
 var thisTask;
 function expandCard(thisCard) {
@@ -335,10 +329,7 @@ function galPicker() {
   }
 
   function insertAfter(referenceNode, newNode) {
-    referenceNode.parentNode.insertBefore(
-      newNode,
-      referenceNode.nextSibling
-    );
+    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
   }
 
   glaColorInit();
@@ -379,19 +370,15 @@ function galPicker() {
     if (target.className === "color item") {
       console.log(theTarget);
       theTarget.style.backgroundColor = target.style.backgroundColor;
-      theTarget.previousElementSibling.value =
-        target.style.backgroundColor;
+      theTarget.previousElementSibling.value = target.style.backgroundColor;
       console.log(theTarget.style.backgroundColor);
       console.log(theTarget.closest(".cardFull").firstElementChild.style);
-      theTarget.closest(
-        ".cardFull"
-      ).firstElementChild.style.backgroundColor =
+      theTarget.closest(".cardFull").firstElementChild.style.backgroundColor =
         target.style.backgroundColor;
       console.log(thisTask);
       thisTask.querySelector(
         ".cardMini"
-      ).firstElementChild.style.backgroundColor =
-        target.style.backgroundColor;
+      ).firstElementChild.style.backgroundColor = target.style.backgroundColor;
       return;
     }
   }
