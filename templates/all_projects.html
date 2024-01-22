@@ -1,18 +1,24 @@
-{% extends 'base.html' %} {% block allproject %}
-active
-{% endblock allproject %}
-{% block main %}
-<div class="container stat-cards-item mx-auto" style="max-width: 1200px;">
+{% extends 'base.html' %} {% block allproject %} active {% endblock allproject
+%} {% block main %}
+<div class="container stat-cards-item mx-auto">
     <table class="table table-bordered">
         <thead class="thead-dark">
             <tr>
                 <th scope="col" class="text-center">
                     <label class="form-check-label font-weight-bold">#</label>
                 </th>
-                <th scope="col" class="form-label font-weight-bold text-center">Project Number</th>
-                <th scope="col" class="form-label font-weight-bold text-center">Author</th>
-                <th scope="col" class="form-label font-weight-bold text-center">Project Title</th>
-                <th scope="col" class="form-label font-weight-bold text-center">Actions</th>
+                <th scope="col" class="form-label font-weight-bold text-center">
+                    Project Number
+                </th>
+                <th scope="col" class="form-label font-weight-bold text-center">
+                    Author
+                </th>
+                <th scope="col" class="form-label font-weight-bold text-center">
+                    Project Title
+                </th>
+                <th scope="col" class="form-label font-weight-bold text-center">
+                    Actions
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -21,16 +27,34 @@ active
                 <td class="text-center">
                     <label class="form-label font-weight-bold text-center">{{ loop.index }}</label>
                 </td>
-                <td class="form-label font-weight-bold text-center">{{ project.project_number }}</td>
-                <td class="form-label font-weight-bold text-center">{{ project.author_name }}</td>
-                <td class="form-label font-weight-bold text-center">{{ project.project_name }}</td>
-                <td class="text-center">
-                    <form action="{{ url_for('delete_project', project_id=project.id) }}" method="POST">
-                        <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
-                    </form>
-                    <form action="{{ url_for('kanban', project_number=project.project_number) }}" method="POST">
-                        <button type="submit" class="btn btn-outline-info btn-sm">View</button>
-                    </form>
+                <td class="form-label font-weight-bold text-center">
+                    {{ project.project_number }}
+                </td>
+                <td class="form-label font-weight-bold text-center">
+                    {{ project.author_name }}
+                </td>
+                <td class="form-label font-weight-bold text-center">
+                    {{ project.project_name }}
+                </td>
+                <td>
+                    <div class="three_elements">
+                        <form action="{{ url_for('delete_project', project_id=project.id) }}" method="POST">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                Delete
+                            </button>
+                        </form>
+                        <form action="{{ url_for('kanban', project_number=project.project_number) }}" method="POST">
+                            <button type="submit" class="btn btn-outline-info btn-sm">
+                                View
+                            </button>
+                        </form>
+                        <form action="{{ url_for('extract', project_id=project.id) }}" method="POST">
+                            <input type="hidden" name="project_number" value="{{ project.project_number }}" />
+                            <button type="submit" class="btn btn-outline-success btn-sm">
+                                Extract
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             {% endfor %}

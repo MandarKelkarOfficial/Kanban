@@ -3849,3 +3849,12 @@ label {
 }
 
 /*# sourceMappingURL=style.min.css.map */
+
+
+.three_elements {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}

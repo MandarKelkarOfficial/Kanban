@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "kanbansheet",
+  "private_key_id": "17d3070ae2b0c876f664fb68ea02aaf6418c09bd",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC3fTnqmt3ordp/\nPShzras/WnVWa9y0dAG+wwQ+e9Rf7FacV8TNKpfy12/LRBhKNT15IWtxU+WJfNgn\nybmq74ivJbGxTkghluJw5+23eiXuRk/9HrpA0FMm3Ase9jv+egG084vum8q4ay+7\n5Mu1WZZXOp+xb5qju+Z7WqE+YfghWIq1gSmXJmFIO19+n4GnOVDvx2z95KTJjaH8\nmta00PYYvymkY8zKuXinDU2B7PeK09il9LNecYhtKBGJot2bTY7NhVm+Eyz6Fukr\niav1AG3q9F2POyTR+/Z29yn8NFlAhMYmD3jYnJ26+eLL7ikJ12pyyZozDKpeWLft\nmDXQNPR1AgMBAAECggEAGcjZriukGnHv3eiAujzB702tZn8SzTLuGdn6yzMIhZBH\nHYJB8BjXsHLwzU4c4bS4lkCJgivpehgWogS5eBlgCkjQPxvCjCHRYU9eOuXJ1cGA\ntQ+v2bLMtI3AbFHq3VhUzBJbbCTtaFv7obpFnA7iTxC4Zy1JPFAH0/bI6OTIgxra\ndAo3eXFcY5bMFb8Da3j6z56LYQ4hFCh2S5kDMank5kp3v1Pl1LjMZJJPfezjini3\nEw3y3n7GJj8lrKEc9HUwZZ84niVq+to4mvUk6/PhACOUvcf4nCJZzZSwaUWfxqU5\nRB0VWgVuOqVniiwvKBTcGdepZLdFAxzmOnpuJAQREwKBgQDuy9KO5yaa1K2NRjFo\ndUOaD4reP0Xecm9SEASr6bTqZ8ril7bzVtO8UonCANYnlyTJxgMcLkqtcxiMiNWT\nrrrKiNrpUj30/wjprnA73XNXm04KM2Ne9Cw1ZSk+fWeaU6MBMTHb6cFtNuAV57wB\nFs4pKnbljC/bk8Jufkr5cLtepwKBgQDEtVzWfTfHF5THkqTMjuOm7m5e3GCIXzhf\noMZKS/1bCKF+8RwsbLG8ytsFg6nnMcMc1eFjByH8n/0lzaWQX+aQ4ElAuX9utMqM\nf/SfowCSm0xLEKiv6uCdcvhojovIMDF7FuhirkLaV41AakjGIwqyBehm5FwV7Zmu\nu1nWsQ3zgwKBgQCeM5ZpaiYfSWs5PxmYlKeWt1lO6ChHuRSbD1Wo9woOiXjWKaDh\nEdLw3tW5G4jFbdLHglGpJ9n9k1TeNgEY+Bdz+rrc/MljOFsVRaXBY3L4xUEsbOMW\nkzl+nmh2p+otSd+h+I+JnBGzYzmOCZp6Njua9jES3o8OL5QOU8kj/FWF3QKBgF/v\nwC6P9ZMxKgvHtn5ZtiflI4k6XA5GunzRMcRsmU07wV/jAgWcoXbdTMK8uzGZsHow\nyfL9OJM4CEPWr0fhrda8vJ1HmyIIJL0vbsQowI/AFA6MOmlJ2XCQ8Rw1YXEqKAfL\nXV07djl899QRwhp4XrACd50vBMZhElII58Dwq0g3AoGBAIL7PvpNquShQCNapMt6\nsBec9ca727IvVGqS0nrePQWcywQS7PjwNHBC1XOm0T2Ca8AWNY3tUg9Y0M8KbEBA\nFoET4PUI/A1q+XWNI96mKTrS3tsY/3P4gw5qy8bnE2WRj4jHMNTqV5T3/0i/QIDa\nkFpenhbPNYSmBNIT2IjWtAmf\n-----END PRIVATE KEY-----\n",
+  "client_email": "kanbanapp@kanbansheet.iam.gserviceaccount.com",
+  "client_id": "116104770862787510908",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/kanbanapp%40kanbansheet.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

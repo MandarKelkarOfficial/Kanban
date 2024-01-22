@@ -1,9 +1,20 @@
-from flask import Flask, render_template, render_template_string, request, redirect, send_from_directory, url_for
+from flask import Flask, jsonify, render_template, render_template_string, request, redirect, send_from_directory, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import *
 from datetime import datetime, timedelta
+from sqlalchemy.dialects.postgresql import JSON 
+from werkzeug.utils import secure_filename
+import os
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
+# Set up credentials
+# scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name('keyKanban.json')
+client = gspread.authorize(creds)
 
+# creds = ServiceAccountCredentials.from_json_keyfile_name('path/to/your/credentials.json', scope)
+# client = gspread.authorize(creds)
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///kanban.db'
@@ -24,6 +35,8 @@ class NewProject(db.Model):
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
+        # New column for storing multiple image URLs
+    images = db.Column(JSON, default=[])
     status = db.Column(db.String(20), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     project_number = db.Column(db.String(50), db.ForeignKey(
@@ -106,6 +119,42 @@ def update_totals():
 
 
 
+# # Function to create a new sheet for each project
+
+# def create_project_sheet(project_number):
+#     gc = gspread.service_account(filename='keyKanban.json')
+
+#     # Open the KANBAN workbook
+#     workbook = gc.open("KANBAN")
+
+#     # Use the project number as the title of the new sheet
+#     new_sheet = workbook.add_worksheet(title=project_number, rows="100", cols="20")
+
+#     # Set up headers in the new sheet
+#     new_sheet.update('B1', [['Task ID', 'Title', 'Status', 'Date Created', 'Image URLs']])
+#     new_sheet.format('A1:F1', {'textFormat': {'bold': True}})
+
+def create_project_sheet(project_number):
+    # Open the KANBAN workbook
+    gc = gspread.service_account(filename='keyKanban.json')
+    workbook = gc.open("KANBAN")
+
+    # Use the project number as the title of the new sheet
+    new_sheet = workbook.add_worksheet(title=project_number, rows="100", cols="20")
+
+    # Set up headers in the new sheet
+    new_sheet.update('A1', [['Task ID', 'Title', 'Status', 'Date Created', 'Image URLs']])
+    new_sheet.format('A1:F1', {'textFormat': {'bold': True}})
+
+    # Fetch data from the Task table for the specific project number
+    tasks = Task.query.filter_by(project_number=project_number).all()
+
+    # Prepare the data to be written to the sheet
+    data = [[task.id, task.title, task.status, str(task.date_created)] for task in tasks]
+
+    # Write the data to the sheet, starting from row 2 (A2)
+    new_sheet.update('A3', data)
+
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -151,31 +200,63 @@ def new_project():
 
 
 
+# @app.route('/add', methods=['POST'])
+# def add():
+#     title = request.form.get('title')
+#     # Use project_number instead of project_id
+#     project_number = request.form.get('project_number')
+
+#     # Assuming you have a date_created field in your Task model
+#     date_created = datetime.utcnow()
+
+#     # Check if project_number is None
+#     if project_number is None:
+#         # Handle the case where project_number is not provided (you may redirect or show an error message)
+#         return redirect(url_for('index'))
+
+#     # Create a new task with the provided project_number
+#     new_task = Task(title=title, status='To Do',
+#                     date_created=date_created, project_number=project_number)
+#     db.session.add(new_task)
+#     db.session.commit()
+
+#     # After adding the new task, update the progress and totals
+#     update_progress()
+#     update_totals()
+
+#     # Redirect the user to the newly created Kanban page
+#     return redirect(url_for('kanban', project_number=project_number))
+
+
 @app.route('/add', methods=['POST'])
 def add():
     title = request.form.get('title')
-    # Use project_number instead of project_id
     project_number = request.form.get('project_number')
+    
+    # Get a list of image files from the form
+    # images = request.files.getlist('images')
 
-    # Assuming you have a date_created field in your Task model
+    # # Validate and save the attached images
+    # uploaded_images = []
+    # for image in images:
+    #     if image and allowed_file(image.filename):
+    #         filename = secure_filename(image.filename)
+    #         image_path = os.path.join('uploads', filename)
+    #         image.save(image_path)
+    #         uploaded_images.append(image_path)
+
     date_created = datetime.utcnow()
 
-    # Check if project_number is None
     if project_number is None:
-        # Handle the case where project_number is not provided (you may redirect or show an error message)
         return redirect(url_for('index'))
 
-    # Create a new task with the provided project_number
-    new_task = Task(title=title, status='To Do',
-                    date_created=date_created, project_number=project_number)
+    new_task = Task(title=title, status='To Do', date_created=date_created, project_number=project_number)
     db.session.add(new_task)
     db.session.commit()
 
-    # After adding the new task, update the progress and totals
     update_progress()
     update_totals()
 
-    # Redirect the user to the newly created Kanban page
     return redirect(url_for('kanban', project_number=project_number))
 
 @app.route('/update/<int:task_id>/<status>', methods=['POST'])
@@ -220,6 +301,7 @@ def kanban(project_number):
 @app.route('/all_project', methods=['GET', 'POST'])
 def all_project():
     projects = NewProject.query.all()
+    
 
     return render_template('all_projects.html', projects=projects)
 
@@ -264,6 +346,44 @@ def delete_project(project_id):
 
     # If not a POST request, render the template with the existing projects
     return render_template('all_projects.html', projects=[project])
+
+
+@app.route('/upload_image/<int:task_id>', methods=['POST'])
+def upload_image(task_id):
+    try:
+        task = Task.query.get(task_id)
+
+        if task:
+            image = request.files.get('image')
+
+            if image and allowed_file(image.filename):
+                filename = secure_filename(image.filename)
+                image_path = os.path.join('uploads', filename)  # Assuming 'uploads' is a folder in your 'static' directory
+                image.save(os.path.join('static', image_path))
+
+                # Update the task's images field with the new image URL
+                task.images.append(image_path)
+                db.session.commit()
+
+                return jsonify({'success': True, 'message': 'Image uploaded successfully'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+    return jsonify({'success': False, 'error': 'Invalid request'})
+
+# Add the extract route
+@app.route('/extract/<int:project_id>', methods=['GET', 'POST'])
+def extract(project_id):
+    if request.method == 'POST':
+        project_number = request.form.get('project_number')
+
+        # Call the function to create a new project sheet
+        create_project_sheet(project_number)
+
+        return redirect(url_for('all_project'))
+
+    return redirect(url_for('all_project'))
 
 
 if __name__ == '__main__':
