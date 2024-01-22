@@ -122,17 +122,25 @@ def update_totals():
 # # Function to create a new sheet for each project
 
 # def create_project_sheet(project_number):
-#     gc = gspread.service_account(filename='keyKanban.json')
-
 #     # Open the KANBAN workbook
+#     gc = gspread.service_account(filename='keyKanban.json')
 #     workbook = gc.open("KANBAN")
 
 #     # Use the project number as the title of the new sheet
 #     new_sheet = workbook.add_worksheet(title=project_number, rows="100", cols="20")
 
 #     # Set up headers in the new sheet
-#     new_sheet.update('B1', [['Task ID', 'Title', 'Status', 'Date Created', 'Image URLs']])
+#     new_sheet.update('A1', [['Task ID', 'Title', 'Status', 'Date Created', 'Image URLs']])
 #     new_sheet.format('A1:F1', {'textFormat': {'bold': True}})
+
+#     # Fetch data from the Task table for the specific project number
+#     tasks = Task.query.filter_by(project_number=project_number).all()
+
+#     # Prepare the data to be written to the sheet
+#     data = [[task.id, task.title, task.status, str(task.date_created)] for task in tasks]
+
+#     # Write the data to the sheet, starting from row 2 (A2)
+#     new_sheet.update('A3', data)
 
 def create_project_sheet(project_number):
     # Open the KANBAN workbook
@@ -140,11 +148,14 @@ def create_project_sheet(project_number):
     workbook = gc.open("KANBAN")
 
     # Use the project number as the title of the new sheet
-    new_sheet = workbook.add_worksheet(title=project_number, rows="100", cols="20")
+    new_sheet = workbook.add_worksheet(title=project_number, rows="100", cols="10")
 
     # Set up headers in the new sheet
-    new_sheet.update('A1', [['Task ID', 'Title', 'Status', 'Date Created', 'Image URLs']])
-    new_sheet.format('A1:F1', {'textFormat': {'bold': True}})
+    header_values = [['Task ID', 'Title', 'Status', 'Date Created', 'Image URLs']]
+    new_sheet.update('B1', header_values)
+
+    # Format headers with 'light cornflower blue 1' color
+    new_sheet.format('B1:F1', {'textFormat': {'bold': True}, 'backgroundColor': {'red': 0.9, 'green': 0.9, 'blue': 1}})
 
     # Fetch data from the Task table for the specific project number
     tasks = Task.query.filter_by(project_number=project_number).all()
@@ -153,7 +164,19 @@ def create_project_sheet(project_number):
     data = [[task.id, task.title, task.status, str(task.date_created)] for task in tasks]
 
     # Write the data to the sheet, starting from row 2 (A2)
-    new_sheet.update('A3', data)
+    new_sheet.update('B3', data)
+
+    # Define color codes for different statuses
+    color_codes = {'Done': {'red': 0, 'green': 1, 'blue': 0},
+                   'To Do': {'red': 1, 'green': 0.6, 'blue': 0},
+                   'In Progress': {'red': 1, 'green': 1, 'blue': 0}}
+
+    # Apply colors to rows based on status
+    for i, task in enumerate(tasks, start=3):
+        status_color = color_codes.get(task.status, {'red': 1, 'green': 1, 'blue': 1})  # Default to white
+        color_range = f'B{i}:F{i}'
+        new_sheet.format(color_range, {'backgroundColor': status_color})
+
 
 
 
